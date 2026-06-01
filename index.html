@@ -245,15 +245,12 @@ const QUESTIONS = [
   { q: 'Q100.  What does a successful first 90 days on FoodStorm look like from a CSM\'s perspective?', c: ['The retailer has configured all advanced settings, enabled kiosk hardware, and completed every training module.', 'Staff are actively using the OMS to manage all orders, the catalog has meaningful customization, at least one first order has been placed digitally, and the retailer has a clear understanding of their GMV baseline and how to grow from it.', 'The retailer has reached a minimum of $50,000 in GMV through the platform.', 'The retailer has connected FoodStorm to the Instacart consumer app and launched at least one paid promotion.'], a: 1 },
 ];
 
-// Stamp each question with its original section so shuffling doesn't lose it
-QUESTIONS.forEach((q, i) => { q.s = Math.floor(i / 10); });
-
 // State
 let current = 0;
 let answers = new Array(100).fill(-1);
 let submitted = false;
 
-function sectionIndex(qi) { return QUESTIONS[qi].s; }
+function sectionIndex(qi) { return Math.floor(qi / 10); }
 
 function renderQuestion(idx) {
   const body = document.getElementById('quiz-body');
