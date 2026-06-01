@@ -107,7 +107,7 @@
   <div class="score-card">
     <h2>Quiz Complete!</h2>
     <div class="score-big" id="score-big"></div>
-    <div class="score-label">out of 100</div>
+    <div class="score-label">correct answers out of 100</div>
     <div class="score-verdict" id="score-verdict"></div>
     <div class="score-breakdown" id="score-breakdown"></div>
     <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:28px;">
@@ -245,23 +245,24 @@ const QUESTIONS = [
   { q: 'Q100.  What does a successful first 90 days on FoodStorm look like from a CSM\'s perspective?', c: ['The retailer has configured all advanced settings, enabled kiosk hardware, and completed every training module.', 'Staff are actively using the OMS to manage all orders, the catalog has meaningful customization, at least one first order has been placed digitally, and the retailer has a clear understanding of their GMV baseline and how to grow from it.', 'The retailer has reached a minimum of $50,000 in GMV through the platform.', 'The retailer has connected FoodStorm to the Instacart consumer app and launched at least one paid promotion.'], a: 1 },
 ];
 
+// Stamp each question with its original section so shuffling doesn't lose it
+QUESTIONS.forEach((q, i) => { q.s = Math.floor(i / 10); });
+
 // State
 let current = 0;
 let answers = new Array(100).fill(-1);
 let submitted = false;
 
-function sectionIndex(qi) { return Math.floor(qi / 10); }
+function sectionIndex(qi) { return QUESTIONS[qi].s; }
 
 function renderQuestion(idx) {
   const body = document.getElementById('quiz-body');
   const q = QUESTIONS[idx];
   const si = sectionIndex(idx);
-  const prevSi = idx > 0 ? sectionIndex(idx - 1) : -1;
 
   let html = '';
-  if (si !== prevSi) {
-    html += `<div class="section-banner"><h2>${SECTIONS[si].title}</h2><p>${SECTIONS[si].desc}</p></div>`;
-  }
+  // Always show the section label since questions are in random order
+  html += `<div class="section-banner"><h2>${SECTIONS[si].title}</h2><p>${SECTIONS[si].desc}</p></div>`;
 
   const labels = ['A', 'B', 'C', 'D'];
   html += `<div class="question-card">
@@ -422,18 +423,23 @@ function retake() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ── Shuffle choices for every question ──────────────────────────────────────
+// ── Shuffle question order AND choices ──────────────────────────────────────
 // Runs once at load and again on retake so order is different each attempt.
 function shuffleQuestions() {
+  // 1. Shuffle the question order (Fisher-Yates)
+  for (let i = QUESTIONS.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [QUESTIONS[i], QUESTIONS[j]] = [QUESTIONS[j], QUESTIONS[i]];
+  }
+
+  // 2. Shuffle the answer choices for every question
   QUESTIONS.forEach(q => {
-    // Pair each choice with its original index, shuffle, then unpack
     const paired = q.c.map((text, i) => ({ text, orig: i }));
     for (let i = paired.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [paired[i], paired[j]] = [paired[j], paired[i]];
     }
     q.c = paired.map(p => p.text);
-    // Find where the original correct answer ended up after shuffle
     q.a = paired.findIndex(p => p.orig === q.a);
   });
 }
