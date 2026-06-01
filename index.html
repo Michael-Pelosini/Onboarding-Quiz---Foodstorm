@@ -259,10 +259,12 @@ function renderQuestion(idx) {
   const body = document.getElementById('quiz-body');
   const q = QUESTIONS[idx];
   const si = sectionIndex(idx);
+  const prevSi = idx > 0 ? sectionIndex(idx - 1) : -1;
 
   let html = '';
-  // Always show the section label since questions are in random order
-  html += `<div class="section-banner"><h2>${SECTIONS[si].title}</h2><p>${SECTIONS[si].desc}</p></div>`;
+  if (si !== prevSi) {
+    html += `<div class="section-banner"><h2>${SECTIONS[si].title}</h2><p>${SECTIONS[si].desc}</p></div>`;
+  }
 
   const labels = ['A', 'B', 'C', 'D'];
   html += `<div class="question-card">
@@ -426,13 +428,7 @@ function retake() {
 // ── Shuffle question order AND choices ──────────────────────────────────────
 // Runs once at load and again on retake so order is different each attempt.
 function shuffleQuestions() {
-  // 1. Shuffle the question order (Fisher-Yates)
-  for (let i = QUESTIONS.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [QUESTIONS[i], QUESTIONS[j]] = [QUESTIONS[j], QUESTIONS[i]];
-  }
-
-  // 2. Shuffle the answer choices for every question
+  // Shuffle the answer choices for every question (question order stays fixed)
   QUESTIONS.forEach(q => {
     const paired = q.c.map((text, i) => ({ text, orig: i }));
     for (let i = paired.length - 1; i > 0; i--) {
