@@ -413,6 +413,7 @@ function retake() {
   answers = new Array(100).fill(-1);
   submitted = false;
   current = 0;
+  shuffleQuestions();
   document.getElementById('score-screen').style.display = 'none';
   document.getElementById('quiz-body').style.display = '';
   document.getElementById('nav-bar').style.display = '';
@@ -421,7 +422,24 @@ function retake() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// ── Shuffle choices for every question ──────────────────────────────────────
+// Runs once at load and again on retake so order is different each attempt.
+function shuffleQuestions() {
+  QUESTIONS.forEach(q => {
+    // Pair each choice with its original index, shuffle, then unpack
+    const paired = q.c.map((text, i) => ({ text, orig: i }));
+    for (let i = paired.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [paired[i], paired[j]] = [paired[j], paired[i]];
+    }
+    q.c = paired.map(p => p.text);
+    // Find where the original correct answer ended up after shuffle
+    q.a = paired.findIndex(p => p.orig === q.a);
+  });
+}
+
 // Init
+shuffleQuestions();
 renderQuestion(0);
 </script>
 </body>
