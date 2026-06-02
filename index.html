@@ -446,7 +446,7 @@ function emailResults() {
 
   const subject = encodeURIComponent(`FoodStorm CSM Quiz Results — ${total}/100 (${pass}) — ${date}`);
   const bodyEncoded = encodeURIComponent(body);
-  window.location.href = `mailto:michael.pelosini@instacart.com?subject=${subject}&body=${bodyEncoded}`;
+  window.open(`https://mail.google.com/mail/?view=cm&to=michael.pelosini%40instacart.com&su=${subject}&body=${bodyEncoded}`, '_blank');
 }
 
 function retake() {
