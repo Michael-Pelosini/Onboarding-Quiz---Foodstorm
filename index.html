@@ -108,7 +108,7 @@
     <h2>Quiz Complete!</h2>
     <div class="score-big" id="score-big"></div>
     <div class="score-label">correct answers out of 100</div>
-    <div id="score-pct" style="font-size:32px;font-weight:300;color:#70757a;margin-top:4px;"></div>
+    <div id="score-pct" style="font-size:40px;font-weight:500;margin-top:8px;"></div>
     <div class="score-verdict" id="score-verdict"></div>
     <div class="score-breakdown" id="score-breakdown"></div>
     <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:28px;">
@@ -342,35 +342,72 @@ function updateProgress() {
 }
 
 function showScore() {
-  submitted = true;
-  document.getElementById('quiz-body').style.display = 'none';
-  document.getElementById('nav-bar').style.display = 'none';
-  document.getElementById('progress-bar-wrap').style.display = 'none';
-  document.getElementById('score-screen').style.display = 'block';
+  try {
+    submitted = true;
 
-  let total = 0;
-  const secScores = Array(10).fill(0);
-  QUESTIONS.forEach((q, i) => {
-    if (answers[i] === q.a) { total++; secScores[Math.floor(i / 10)]++; }
-  });
+    // Hide quiz UI
+    ['quiz-body','nav-bar','progress-bar-wrap'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
 
-  const pct = Math.round(total);
-  const bigEl = document.getElementById('score-big');
-  bigEl.textContent = total;
-  bigEl.className = 'score-big ' + (total >= 75 ? 'pass' : 'fail');
-  document.getElementById('score-pct').textContent = `${pct}%`;
+    // Show score screen first so it's visible even if scoring throws
+    var screen = document.getElementById('score-screen');
+    if (screen) screen.style.display = 'block';
 
-  const verdict = document.getElementById('score-verdict');
-  if (total >= 75) { verdict.textContent = '🎉 Pass — well done!'; verdict.className = 'score-verdict verdict-pass'; }
-  else { verdict.textContent = `Not yet — ${75 - total} more needed to pass`; verdict.className = 'score-verdict verdict-fail'; }
+    // Tally scores
+    var total = 0;
+    var secScores = [0,0,0,0,0,0,0,0,0,0];
+    for (var i = 0; i < QUESTIONS.length; i++) {
+      if (answers[i] === QUESTIONS[i].a) {
+        total++;
+        secScores[Math.floor(i / 10)]++;
+      }
+    }
 
-  const breakdown = document.getElementById('score-breakdown');
-  breakdown.innerHTML = SECTIONS.map((s, i) =>
-    `<div class="section-score"><div class="sec-name">${s.title.replace('Section ', 'S').split(':')[0]}</div>
-     <div class="sec-val" style="color:${secScores[i]>=8?'#137333':secScores[i]>=6?'#f29900':'#c5221f'}">${secScores[i]} / 10</div></div>`
-  ).join('');
+    var pct = Math.round((total / 100) * 100); // percentage out of 100
 
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Score number
+    var bigEl = document.getElementById('score-big');
+    if (bigEl) {
+      bigEl.textContent = total;
+      bigEl.className = 'score-big ' + (total >= 75 ? 'pass' : 'fail');
+    }
+
+    // Percentage — styled to match pass/fail colour
+    var pctEl = document.getElementById('score-pct');
+    if (pctEl) {
+      pctEl.textContent = pct + '%';
+      pctEl.style.color = total >= 75 ? '#34a853' : '#ea4335';
+    }
+
+    // Verdict
+    var verdict = document.getElementById('score-verdict');
+    if (verdict) {
+      if (total >= 75) { verdict.textContent = '🎉 Pass — well done!'; verdict.className = 'score-verdict verdict-pass'; }
+      else { verdict.textContent = 'Not yet — ' + (75 - total) + ' more needed to pass'; verdict.className = 'score-verdict verdict-fail'; }
+    }
+
+    // Section breakdown
+    var breakdown = document.getElementById('score-breakdown');
+    if (breakdown) {
+      breakdown.innerHTML = SECTIONS.map(function(s, i) {
+        var color = secScores[i] >= 8 ? '#137333' : secScores[i] >= 6 ? '#f29900' : '#c5221f';
+        return '<div class="section-score"><div class="sec-name">' + s.title.replace('Section ','S').split(':')[0] + '</div>' +
+               '<div class="sec-val" style="color:' + color + '">' + secScores[i] + ' / 10</div></div>';
+      }).join('');
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  } catch(err) {
+    // Fallback: show a plain score if anything above fails
+    document.getElementById('score-screen').style.display = 'block';
+    document.getElementById('score-screen').innerHTML =
+      '<div class="score-card"><h2>Quiz Complete!</h2>' +
+      '<p style="font-size:20px;margin-top:16px;">An error occurred displaying your results: ' + err.message + '</p>' +
+      '<button class="btn-primary" style="margin-top:20px" onclick="retake()">Retake Quiz</button></div>';
+  }
 }
 
 function emailResults() {
